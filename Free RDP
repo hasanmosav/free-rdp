@@ -1,0 +1,30 @@
+on:
+  workflow_dispatch:          # lets you press "Run" manually
+  schedule:
+    - cron: '0 */5 * * *'     # auto-restart every 5 hours
+
+jobs:
+  rdp:
+    runs-on: windows-latest
+    timeout-minutes: 350      # GitHub max is 360
+    steps:
+      - name: Enable RDP and create user
+        shell: powershell
+        run: |
+          $pass = "Rdp@12345"   # <-- change to your own
+          net user rdpuser $pass /add
+          net localgroup "Remote Desktop Users" rdpuser /add
+          net localgroup Administrators rdpuser /add
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name 'fDenyTSConnections' -Value 0
+          Write-Host "USERNAME: rdpuser"
+          Write-Host "PASSWORD: $pass"
+
+      - name: Start ngrok RDP tunnel
+        uses: imranismail/ngrok-connection@v0.2
+        with:
+          args: |
+            tcp 3389
+            --log=stdout
+        env:
+          NGROK_AUTHTOKEN: *** secrets.NGROK_AUTHTOKEN }}
