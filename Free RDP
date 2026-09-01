@@ -1,3 +1,5 @@
+name: Free RDP
+
 on:
   workflow_dispatch:          # lets you press "Run" manually
   schedule:
